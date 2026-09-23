@@ -4,17 +4,23 @@
 
 **Goal:** Build a production-ready first version of iGreen that lets an individual licensed seller find real businesses, manage leads, analyse an energy bill and share a persisted saving estimate.
 
-**Architecture:** A Next.js 16 App Router monolith owns the responsive interface, authenticated server actions and two narrow route handlers. Supabase provides cookie-based authentication, PostgreSQL with tenant-scoped RLS and a private invoice bucket. Google Geocoding plus Places Text Search are called only from the server and transform provider payloads into stable application types.
+**Architecture:** A Next.js 16 App Router monolith owns the responsive interface, authenticated server actions and two narrow route handlers. Supabase provides cookie-based authentication, PostgreSQL with tenant-scoped RLS and a private invoice bucket. Google Geocoding plus Places Text Search are called only from the server; Places content is transiently displayed with Google attribution, while the CRM stores only the exempt place ID and user-entered fields.
 
 **Tech Stack:** Next.js 16, React 19, TypeScript, Tailwind CSS, shadcn/ui, Zod, Supabase (`@supabase/ssr`, `@supabase/supabase-js`), Google Maps Platform, dnd-kit, Vitest and Testing Library.
 
 **Spec:** `docs/superpowers/specs/2026-09-22-igreen-mvp-design.md`
 
+## Estado da execução — 23/09/2026
+
+- Código das tarefas 1–10 implementado localmente; testes (28), lint, TypeScript e build de produção passam.
+- Smoke test autenticado observou login, busca Google, importação e páginas do pipeline/CRM/fatura respondendo no servidor local; o schema remoto também respondeu para as tabelas principais.
+- Ainda falta validar cadastro por e-mail, upload e URL assinada de fatura, persistência de simulação, isolamento entre duas contas e publicação num domínio público. Esses passos ficam pendentes no [checklist de aceite](../acceptance-checklist.md).
+
 ## Global Constraints
 
 - Use Next.js App Router and `proxy.ts`; do not create a deprecated `middleware.ts` file.
 - Keep all user sessions cookie-based with `@supabase/ssr`; server authorization must use a verified user, never `getSession()` alone.
-- Keep `SUPABASE_SERVICE_ROLE_KEY` and `GOOGLE_MAPS_API_KEY` server-only. `.env.local` is ignored and never committed.
+- Keep `GOOGLE_MAPS_API_KEY` server-only. Use only the public Supabase key with authenticated user sessions and RLS; no `service_role` key is required. `.env`, `.env.local` and local variants are ignored.
 - Every application table carries or inherits an `organization_id`; all exposed tables and `storage.objects` policies enforce tenant isolation with RLS.
 - The `invoices` Storage bucket is private, accepts only PDF/JPG/JPEG/PNG and has a 10 MB maximum.
 - The first editable eligibility rule is `CPFL / SP / Comercial / 12%`; an estimate must state it remains subject to final validation.
@@ -127,7 +133,6 @@ Create a root layout with `lang="pt-BR"`, a clean sans-serif font and an accessi
 ```dotenv
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
 GOOGLE_MAPS_API_KEY=
 SUPABASE_PROJECT_REF=
 ```
@@ -441,7 +446,7 @@ git commit -m "feat: add organization settings and simulation rules"
 
 **Interfaces:**
 - Produces `searchBusinesses(filters: ProspectFilters): Promise<ProspectBusiness[]>` and `importProspects(input: ProspectBusiness[]): Promise<ImportResult>`.
-- `ProspectBusiness` has `placeId`, `name`, `category`, `address`, `city`, `state`, `latitude`, `longitude`, `rating`, `phone`, `website`, `openHours` and computed `score`.
+- `ProspectBusiness` is transient search-result data. Google-sourced name, address, location, rating, phone and website are not persisted. CRM import accepts the `placeId` and manually entered company fields; score is based only on those fields.
 
 - [ ] **Step 1: Write failing adapter and duplicate tests.**
 
@@ -473,7 +478,7 @@ The route handler authenticates the request, validates filters with Zod, respond
 
 - [ ] **Step 4: Implement result selection and transactional import behavior.**
 
-Create a normalized fingerprint from name and address. For each selected company, check the organization-visible `external_place_id` and fingerprint before inserting; insert only nonduplicates with the score from `scoreLead`, status `NOVO` and a `LEAD_CRIADO` activity. Return created/skipped counts and render them without hiding results. The Add-to-CRM action derives organization membership server-side and ignores any organization id sent by the browser.
+Require the user to enter the CRM name, segment, address, phone, email, website and open hours explicitly. Persist only the permitted `external_place_id`, user-entered fields, user-input search city/state, score computed from user-entered fields, status `NOVO` and a `LEAD_CRIADO` activity. Return created/skipped counts and render them without hiding results. The import action derives organization membership server-side and ignores any organization id sent by the browser.
 
 - [ ] **Step 5: Verify the real provider slice and commit it.**
 
@@ -733,7 +738,7 @@ Expected: FAIL because the test file does not exist.
 
 - [ ] **Step 3: Document exact setup and release steps.**
 
-`docs/supabase-setup.md` must instruct the operator to configure the app's Site URL and redirect URL (`http://localhost:3000/auth/confirm` locally and `https://<vercel-domain>/auth/confirm` in production), enable email/password authentication, enable Places API (New) and Geocoding API, restrict the Google key by server environment, authenticate the Supabase CLI, set `SUPABASE_PROJECT_REF`, run `supabase db push`, and generate `database.ts` after migrations change.
+`docs/supabase-setup.md` must instruct the operator to configure the app's Site URL and redirect URL (`http://localhost:3000/auth/confirm` locally and `https://<vercel-domain>/auth/confirm` in production), enable email/password authentication, enable Places API (New) and Geocoding API, restrict the Google key by server environment, authenticate the Supabase CLI, set `SUPABASE_PROJECT_REF`, run `supabase db push`, and regenerate `database.ts` after migrations change. Do not configure a `service_role` key in the app.
 
 `README.md` must include:
 

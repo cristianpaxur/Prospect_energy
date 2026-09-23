@@ -1,0 +1,7 @@
+import Link from 'next/link'
+import { ArrowRight, CalendarClock } from 'lucide-react'
+import type { DashboardSummary } from '@/lib/dashboard/summary'
+
+export function TodayTasks({ summary }: { summary: DashboardSummary }) {
+  return <section className="card"><div className="card-head"><div><h2 className="card-title">Tarefas de hoje</h2><p className="card-copy">Acompanhe seus próximos contatos</p></div><span className="badge">{summary.todayTasks.length}</span></div>{summary.todayTasks.length ? <div className="task-list">{summary.todayTasks.slice(0, 6).map((task) => <Link className="task-row" key={task.id} href={task.lead_id ? `/leads/${task.lead_id}` : '/leads'}><span className="task-dot" /><span style={{ minWidth: 0, flex: 1 }}><span className="task-name" style={{ display: 'block' }}>{task.description}</span><span className="task-meta">{task.leads?.name ?? 'Lead'} · {new Date(task.due_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' })}</span></span><ArrowRight size={14} color="#88969b" /></Link>)}</div> : <div className="empty-state" style={{ minHeight: 150 }}><div><span className="empty-icon"><CalendarClock size={19} /></span><p className="empty-title">Sem tarefas para hoje</p><p className="empty-copy">Crie um lembrete dentro de um lead para organizar seus retornos.</p><Link className="btn btn-secondary" href="/leads">Ver leads</Link></div></div>}</section>
+}

@@ -51,16 +51,15 @@ Componentes:
 - **Supabase Storage:** bucket privado de faturas, acessado apenas por URL assinada.
 - **Google Places API:** descoberta de empresas reais a partir dos filtros do usuário.
 
-Variáveis de ambiente necessárias:
+Variáveis de ambiente necessárias em runtime:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY
 GOOGLE_MAPS_API_KEY
 ```
 
-As chaves serão fornecidas localmente em `.env.local`, que ficará ignorado pelo Git. A configuração de produção será feita nas variáveis da Vercel.
+Não é necessária chave `service_role`: as operações usam a sessão do licenciado e RLS. As credenciais ficam em `.env.local` (ou `.env`, ambos ignorados pelo Git); a configuração de produção será feita nas variáveis da Vercel.
 
 ## 4. Domínio e dados
 
@@ -80,7 +79,7 @@ Todas as entidades de negócio carregam `organization_id` de forma direta ou por
 | `simulations` | Resultado imutável de cada cálculo. |
 | `message_templates` | Textos de WhatsApp por organização. |
 
-`leads` terá uma restrição única por `(organization_id, external_place_id)` quando houver `place_id` do Google. Sem identificador externo, a aplicação verificará uma chave normalizada de nome e endereço na mesma organização e alertará antes de inserir.
+`leads` terá uma restrição única por `(organization_id, external_place_id)` quando houver `place_id` do Google. Sem identificador externo, a aplicação verificará uma chave normalizada de nome e endereço na mesma organização e alertará antes de inserir. Conteúdo de Places (nome, telefone, site, endereço, avaliações e coordenadas) aparece somente durante a pesquisa; o CRM armazena apenas o `place_id` e os campos que o licenciado digita manualmente.
 
 ## 5. Regras de negócio
 
