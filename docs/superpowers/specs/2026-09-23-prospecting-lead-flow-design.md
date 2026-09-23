@@ -2,7 +2,7 @@
 
 **Data:** 2026-09-23
 
-**Status:** aprovado para revisão da especificação
+**Status:** aprovado
 
 **Objetivo:** priorizar empresas ainda não cadastradas no CRM, tornar clara a próxima ação de cada lead e dar mais fluidez à interface sem alterar sua identidade visual.
 
