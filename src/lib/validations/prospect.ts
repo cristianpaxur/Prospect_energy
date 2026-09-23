@@ -11,6 +11,10 @@ export const prospectFiltersSchema = z.object({
   openNow: z.coerce.boolean().default(false),
 })
 
+export const prospectSearchRequestSchema = prospectFiltersSchema.extend({
+  pageToken: z.string().trim().min(1).max(4096).optional(),
+})
+
 export const importProspectsSchema = z.array(z.object({
   placeId: z.string().min(1).max(250),
   name: z.string().trim().min(1, 'Preencha o nome do lead no CRM.').max(200),
@@ -37,3 +41,4 @@ export const quickImportProspectSchema = z.object({
 }).strict()
 
 export type ProspectFilters = z.infer<typeof prospectFiltersSchema>
+export type ProspectSearchRequest = z.infer<typeof prospectSearchRequestSchema>

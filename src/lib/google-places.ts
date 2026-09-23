@@ -8,7 +8,12 @@ const placeTypes: Record<ProspectFilters['category'], string | undefined> = {
   Hotel: 'hotel', Farmácia: 'pharmacy', Clínica: 'medical_clinic', Loja: 'store', Outros: undefined,
 }
 
-type GoogleResponse<T> = { status?: string; results?: T[]; places?: T[]; error_message?: string }
+type GoogleResponse<T> = { status?: string; results?: T[]; places?: T[]; nextPageToken?: string; error_message?: string }
+
+export type ProspectSearchPage = {
+  businesses: ProspectBusiness[]
+  nextPageToken: string | null
+}
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, { ...init, signal: AbortSignal.timeout(12000), cache: 'no-store' })
@@ -35,7 +40,7 @@ function distanceKm(a: { latitude: number; longitude: number }, b: { latitude: n
   return 6371 * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value))
 }
 
-export async function searchBusinesses(filters: ProspectFilters): Promise<ProspectBusiness[]> {
+export async function searchBusinesses(filters: ProspectFilters, pageToken?: string): Promise<ProspectSearchPage> {
   const key = process.env.GOOGLE_MAPS_API_KEY
   if (!key) throw new Error('Configure GOOGLE_MAPS_API_KEY para pesquisar empresas.')
   const center = await geocodeCity(filters.city, filters.state, key)
@@ -45,14 +50,15 @@ export async function searchBusinesses(filters: ProspectFilters): Promise<Prospe
     languageCode: 'pt-BR',
     regionCode: 'BR',
     pageSize: 20,
-    maxResultCount: 20,
     includedType: placeTypes[filters.category],
     strictTypeFiltering: Boolean(placeTypes[filters.category]),
     openNow: filters.openNow || undefined,
     minRating: filters.minRating,
     locationBias: { circle: { center: { latitude: center.latitude, longitude: center.longitude }, radius: filters.radiusKm * 1000 } },
+    ...(pageToken ? { pageToken } : {}),
   }
   const fieldMask = [
+    'nextPageToken',
     'places.id', 'places.displayName', 'places.formattedAddress', 'places.location', 'places.rating', 'places.userRatingCount', 'places.googleMapsUri',
     'places.nationalPhoneNumber', 'places.websiteUri', 'places.regularOpeningHours', 'places.types',
   ].join(',')
@@ -63,12 +69,14 @@ export async function searchBusinesses(filters: ProspectFilters): Promise<Prospe
     body: JSON.stringify(body),
   })
 
-  return (result.places ?? []).filter((place) => place.id && place.location?.latitude !== undefined && place.location.longitude !== undefined)
+  const businesses = (result.places ?? []).filter((place) => place.id && place.location?.latitude !== undefined && place.location.longitude !== undefined)
     .map((place) => toProspectBusiness(place, { city: filters.city, state: filters.state }))
     .filter((place) => distanceKm(center, { latitude: place.latitude!, longitude: place.longitude! }) <= filters.radiusKm)
     .filter((place) => !filters.hasPhone || place.hasPhone)
     .filter((place) => !filters.hasWebsite || place.hasWebsite)
     .filter((place) => filters.minRating === undefined || (place.rating ?? 0) >= filters.minRating)
+
+  return { businesses, nextPageToken: result.nextPageToken ?? null }
 }
 
 export async function getGooglePlaceDetails(placeId: string) {

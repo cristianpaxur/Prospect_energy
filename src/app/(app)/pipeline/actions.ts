@@ -11,6 +11,7 @@ export async function moveLeadAction(leadId: string, toStatus: string) {
   const { error } = await supabase.rpc('move_lead', { p_lead_id: leadId, p_to_status: toStatus as PipelineStatus })
   if (error) return { error: error.message.includes('sem permissão') ? 'Este lead não está disponível.' : 'Não foi possível mover o lead.' }
   revalidatePath('/pipeline')
+  revalidatePath('/leads')
   revalidatePath('/dashboard')
   revalidatePath(`/leads/${leadId}`)
   return { success: true }

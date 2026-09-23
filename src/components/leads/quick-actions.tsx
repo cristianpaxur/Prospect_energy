@@ -31,12 +31,14 @@ export function QuickActions({ lead, licenseeName, licenseeCity, defaultMessage 
   }
 
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || displayName)}`
-  return <div className="stack"><label className="field"><span className="label">Mensagem para WhatsApp · revise antes de enviar</span><textarea className="textarea" value={messageEdited ? message : generatedMessage} onChange={(event) => { setMessage(event.target.value); setMessageEdited(true) }} /></label><div className="grid" style={{ gridTemplateColumns: 'repeat(2,minmax(0,1fr))' }}>
-    <Button type="button" onClick={() => phone && openExternal(whatsappUrl(phone, message), 'WHATSAPP_ABERTO')} disabled={!phone}><MessageCircle size={15} /> WhatsApp</Button>
-    <Button variant="secondary" type="button" onClick={() => phone && openExternal(`tel:${phone}`, 'LIGACAO_INICIADA')} disabled={!phone}><Phone size={15} /> Ligar</Button>
-    <Button variant="secondary" type="button" onClick={() => lead.email && openExternal(`mailto:${lead.email}`, 'EMAIL_ABERTO')} disabled={!lead.email}><Mail size={15} /> E-mail</Button>
-    <Button variant="secondary" type="button" onClick={() => void copyData()}><Clipboard size={15} /> Copiar dados</Button>
-    <Button variant="secondary" type="button" onClick={() => website && openExternal(website, 'SITE_ABERTO')} disabled={!website}><Globe size={15} /> Abrir site</Button>
-    <Button variant="secondary" type="button" onClick={() => openExternal(mapUrl, 'MAPA_ABERTO')}><MapPin size={15} /> Ver localização</Button>
-  </div>{feedback && <span className="notice" role="status">{feedback}</span>}{(!phone || !lead.email || !website) && <p className="small muted" style={{ margin: 0 }}>Algumas ações ficam disponíveis quando a empresa fornece telefone, e-mail ou site.</p>}</div>
+  return <div className="stack"><label className="field"><span className="label">Mensagem para WhatsApp · revise antes de enviar</span><textarea className="textarea" value={messageEdited ? message : generatedMessage} onChange={(event) => { setMessage(event.target.value); setMessageEdited(true) }} /></label>
+    <Button className="quick-action-whatsapp" type="button" size="lg" onClick={() => phone && openExternal(whatsappUrl(phone, messageEdited ? message : generatedMessage), 'WHATSAPP_ABERTO')} disabled={!phone}><MessageCircle size={17} /> Abrir conversa no WhatsApp</Button>
+    <details className="quick-action-details"><summary>Outras formas de contato</summary><div className="grid quick-action-secondary-grid">
+      <Button variant="secondary" type="button" onClick={() => phone && openExternal(`tel:${phone}`, 'LIGACAO_INICIADA')} disabled={!phone}><Phone size={15} /> Ligar</Button>
+      <Button variant="secondary" type="button" onClick={() => lead.email && openExternal(`mailto:${lead.email}`, 'EMAIL_ABERTO')} disabled={!lead.email}><Mail size={15} /> E-mail</Button>
+      <Button variant="secondary" type="button" onClick={() => void copyData()}><Clipboard size={15} /> Copiar dados</Button>
+      <Button variant="secondary" type="button" onClick={() => website && openExternal(website, 'SITE_ABERTO')} disabled={!website}><Globe size={15} /> Abrir site</Button>
+      <Button variant="secondary" type="button" onClick={() => openExternal(mapUrl, 'MAPA_ABERTO')}><MapPin size={15} /> Ver localização</Button>
+    </div></details>
+    {feedback && <span className="notice" role="status">{feedback}</span>}{(!phone || !lead.email || !website) && <p className="small muted" style={{ margin: 0 }}>Algumas ações ficam disponíveis quando a empresa fornece telefone, e-mail ou site.</p>}</div>
 }
