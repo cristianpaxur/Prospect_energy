@@ -23,3 +23,13 @@
 - [ ] Completar identificação do controlador e revisar Termos/Privacidade antes de abrir cadastro publicamente.
 
 Os testes de fluxo autenticado dependem de contas de teste e não foram executados automaticamente para evitar criar dados sem autorização.
+
+## Growth: captação pública
+
+- [x] O formulário público exige consentimento e aceita apenas PDF/JPG/PNG com até 10 MB.
+- [x] O upload anônimo é limitado ao caminho privado emitido para uma entrada e só é confirmado após verificar o objeto.
+- [x] A oportunidade recebe origem `PUBLIC_LINK`, permanece no estágio `NOVO` e ganha uma tarefa de acompanhamento.
+- [x] O teste local de integração cobre organizações isoladas, consentimento, upload, link, revisão e cadastro idempotente de fatura.
+- [ ] Ativar um link pelo workspace de teste e revisar visualmente o formulário em desktop e celular.
+- [ ] Completar a revisão da fatura, confirmar os dados e abrir a simulação existente; testar a conclusão da tarefa de próximo contato.
+- [ ] Antes da divulgação pública, completar a identidade e os canais do controlador, prazos de retenção e processo de exclusão descritos na política de privacidade.

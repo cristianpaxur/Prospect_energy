@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { getCurrentContext } from '@/lib/auth/context'
 import { validateInvoiceFile, invoiceSchema } from '@/lib/validations/invoice'
+import type { CustomerType } from '@/lib/supabase/database'
 
 export type InvoiceActionState = { error?: string; success?: string }
 
@@ -47,4 +48,33 @@ export async function uploadInvoice(_state: InvoiceActionState, formData: FormDa
   revalidatePath(`/leads/${leadId}/fatura`)
   revalidatePath('/dashboard')
   return { success: 'Fatura salva com segurança. Já é possível calcular a simulação.' }
+}
+
+export async function registerPublicIntakeInvoice(_state: InvoiceActionState, formData: FormData): Promise<InvoiceActionState> {
+  const submissionId = String(formData.get('submissionId') ?? '')
+  if (!/^[0-9a-f-]{36}$/i.test(submissionId)) return { error: 'Esta entrada não está disponível.' }
+  const parsed = invoiceSchema.safeParse(Object.fromEntries(formData))
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? 'Confira os dados da fatura.' }
+
+  const { supabase, organizationId } = await getCurrentContext()
+  const { data: intake } = await supabase.from('public_intake_submissions').select('lead_id')
+    .eq('id', submissionId).eq('organization_id', organizationId).maybeSingle()
+  if (!intake) return { error: 'Esta entrada não está disponível neste workspace.' }
+  const leadId = intake.lead_id as string
+  const fields = parsed.data
+  const { data, error } = await supabase.rpc('register_public_intake_invoice', {
+    p_submission_id: submissionId,
+    p_provider: fields.provider,
+    p_state: fields.state,
+    p_customer_type: fields.customerType as CustomerType,
+    p_amount: fields.amount,
+    p_consumption_kwh: fields.consumptionKwh,
+    p_reference_date: fields.referenceDate,
+  })
+  if (error || !data) return { error: 'Não foi possível registrar os dados da fatura. Verifique se o arquivo foi recebido.' }
+  revalidatePath(`/leads/${leadId}`)
+  revalidatePath(`/leads/${leadId}/fatura`)
+  revalidatePath(`/leads/${leadId}/simulacao`)
+  revalidatePath('/dashboard')
+  return { success: 'Dados da fatura registrados. Agora você pode preparar a simulação.' }
 }

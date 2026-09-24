@@ -8,6 +8,7 @@ import { LeadCompanyInfo } from '@/components/leads/lead-company-info'
 import { LeadEditForm } from '@/components/leads/lead-edit-form'
 import { LeadHeader } from '@/components/leads/lead-header'
 import { LeadNextAction } from '@/components/leads/lead-next-action'
+import { PublicIntakeReviewControls } from '@/components/leads/public-intake-review-controls'
 import { LeadStageControl } from '@/components/leads/lead-stage-control'
 import { NoteForm } from '@/components/leads/note-form'
 import { QuickActions } from '@/components/leads/quick-actions'
@@ -35,6 +36,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     <main className="page-content lead-detail-page lead-detail-action-layout">
       <LeadHeader lead={lead} />
       <LeadStageControl leadId={lead.id} status={lead.pipeline_status as PipelineStatus} />
+
+      {detail.publicIntake && <section className="card section-gap" aria-labelledby="public-intake-title"><div className="card-head"><div><h2 className="card-title" id="public-intake-title">Entrada pelo link público</h2><p className="card-copy">Dados enviados com consentimento registrado em {new Date(detail.publicIntake.consent_at).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}.</p></div><span className={`badge ${detail.publicIntake.reviewed_at ? 'badge-success' : 'badge-warning'}`}>{detail.publicIntake.reviewed_at ? 'Revisada' : 'Aguardando revisão'}</span></div><div className="card-pad stack"><div className="task-row"><FileText size={16} color="#078251" /><span style={{ flex: 1 }}><span className="task-name" style={{ display: 'block' }}>{detail.publicIntake.original_filename}</span><span className="task-meta">{detail.publicIntake.upload_state === 'RECEBIDO' ? 'Fatura recebida' : 'Aguardando envio da fatura'} · consentimento {detail.publicIntake.consent_version}</span></span>{detail.publicIntake.signedUrl && <a className="btn btn-secondary" href={detail.publicIntake.signedUrl} target="_blank" rel="noreferrer">Ver fatura</a>}</div><details><summary className="small muted">Ver texto do consentimento</summary><p className="small">{detail.publicIntake.consent_text}</p></details><PublicIntakeReviewControls submissionId={detail.publicIntake.id} leadId={lead.id} uploadState={detail.publicIntake.upload_state} reviewedAt={detail.publicIntake.reviewed_at} /></div></section>}
 
       <div className="lead-option-one-grid">
         <div className="lead-option-one-main">

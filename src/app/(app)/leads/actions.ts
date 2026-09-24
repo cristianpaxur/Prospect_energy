@@ -157,3 +157,30 @@ export async function recordContactAction(leadId: string, action: string) {
   revalidatePath('/dashboard')
   return { success: true }
 }
+
+async function getPublicIntakeSubmission(formData: FormData) {
+  const submissionId = String(formData.get('submissionId') ?? '')
+  if (!/^[0-9a-f-]{36}$/i.test(submissionId)) return null
+  const context = await getCurrentContext()
+  const { data } = await context.supabase.from('public_intake_submissions')
+    .select('id,lead_id').eq('id', submissionId).eq('organization_id', context.organizationId).maybeSingle()
+  if (!data) return null
+  return { ...context, submissionId: data.id as string, leadId: data.lead_id as string }
+}
+
+export async function reconcilePublicIntakeUpload(formData: FormData) {
+  const intake = await getPublicIntakeSubmission(formData)
+  if (!intake) return
+  await intake.supabase.rpc('reconcile_public_intake_upload', { p_submission_id: intake.submissionId })
+  revalidatePath('/dashboard')
+  revalidatePath(`/leads/${intake.leadId}`)
+  revalidatePath(`/leads/${intake.leadId}/fatura`)
+}
+
+export async function reviewPublicIntake(formData: FormData) {
+  const intake = await getPublicIntakeSubmission(formData)
+  if (!intake) return
+  await intake.supabase.rpc('review_public_intake', { p_submission_id: intake.submissionId })
+  revalidatePath('/dashboard')
+  revalidatePath(`/leads/${intake.leadId}`)
+}

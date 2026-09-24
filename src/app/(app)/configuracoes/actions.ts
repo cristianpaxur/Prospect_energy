@@ -87,3 +87,22 @@ export async function saveEligibilityRule(_state: SettingsActionState, formData:
   revalidatePath('/configuracoes')
   return { success: 'Regra de simulação salva.' }
 }
+
+export async function managePublicIntakeLink(_state: SettingsActionState, formData: FormData): Promise<SettingsActionState & { publicLink?: { code: string | null; active: boolean } }> {
+  const previousLink = (_state as SettingsActionState & { publicLink?: { code: string | null; active: boolean } }).publicLink
+  const operation = String(formData.get('operation') ?? '')
+  if (!['enable', 'rotate', 'disable'].includes(operation)) return { publicLink: previousLink, error: 'Operação de link inválida.' }
+  const { supabase, organizationId } = await ownerContext()
+  const { data, error } = await supabase.rpc('manage_public_intake_link', {
+    p_organization_id: organizationId,
+    p_operation: operation,
+  })
+  if (error || !data?.[0]) return { publicLink: previousLink, error: 'Não foi possível atualizar o link público. Tente novamente.' }
+  revalidatePath('/configuracoes')
+  revalidatePath('/dashboard')
+  const publicLink = { code: data[0].out_code as string | null, active: data[0].out_active as boolean }
+  return {
+    publicLink,
+    success: operation === 'disable' ? 'Link público desativado.' : operation === 'rotate' ? 'Novo link criado. O anterior foi desativado.' : 'Formulário público ativado.',
+  }
+}

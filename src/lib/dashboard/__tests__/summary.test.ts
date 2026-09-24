@@ -21,4 +21,15 @@ describe('dashboard summary', () => {
     }, '2026-09-22')
     expect(summary.identifiedSavings).toBe(462)
   })
+
+  it('exposes only the pending public intake queue supplied for this workspace', () => {
+    const submission = { id: 'submission-1', lead_id: 'lead-1', upload_state: 'RECEBIDO', created_at: '2026-09-24T10:00:00Z', leads: { name: 'Mercado Central', city: 'Campinas' } }
+    const summary = toDashboardSummary({
+      leads: [], invoices: [], simulations: [], tasks: [],
+      publicIntakeCount: 4,
+      publicIntakeSubmissions: [submission],
+    }, '2026-09-24')
+    expect(summary.publicIntakeCount).toBe(4)
+    expect(summary.publicIntakeSubmissions).toEqual([submission])
+  })
 })

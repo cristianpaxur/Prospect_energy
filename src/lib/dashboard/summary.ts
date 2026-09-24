@@ -7,6 +7,8 @@ export type DashboardInput = {
   invoices: { id: string }[]
   simulations: { lead_id: string; estimated_monthly_savings: number | string | null; created_at: string }[]
   tasks: { id: string; lead_id?: string; type?: string; description?: string; due_at: string; completed_at: string | null; leads?: { name: string } | null }[]
+  publicIntakeCount?: number
+  publicIntakeSubmissions?: { id: string; lead_id: string; upload_state: string; created_at: string; leads?: { name: string; city?: string } | null }[]
 }
 
 export type DashboardSummary = {
@@ -16,6 +18,8 @@ export type DashboardSummary = {
   identifiedSavings: number
   pipelineCounts: Record<(typeof DASHBOARD_PIPELINE_ORDER)[number], number>
   todayTasks: DashboardInput['tasks']
+  publicIntakeCount: number
+  publicIntakeSubmissions: NonNullable<DashboardInput['publicIntakeSubmissions']>
 }
 
 export function toDashboardSummary(input: DashboardInput, today: string): DashboardSummary {
@@ -47,6 +51,8 @@ export function toDashboardSummary(input: DashboardInput, today: string): Dashbo
     identifiedSavings: Math.round([...latestSavingsByLead.values()].reduce((total, row) => total + row.amount, 0) * 100) / 100,
     pipelineCounts,
     todayTasks,
+    publicIntakeCount: input.publicIntakeCount ?? 0,
+    publicIntakeSubmissions: input.publicIntakeSubmissions ?? [],
   }
 }
 

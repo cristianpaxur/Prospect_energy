@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { ArrowUpRight, Bolt, Building2, FileText, HandCoins, Users } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Bolt, Building2, FileText, HandCoins, Users } from 'lucide-react'
 import { EmptyDashboard } from '@/components/dashboard/empty-dashboard'
 import { Funnel } from '@/components/dashboard/funnel'
 import { KpiCard } from '@/components/dashboard/kpi-card'
@@ -26,6 +26,7 @@ export default async function DashboardPage() {
       <KpiCard label="Economia identificada" value={formatBRL(summary.identifiedSavings)} note="Estimativa mensal mais recente" icon={<HandCoins size={16} />} />
     </div>
     {summary.leadCount === 0 ? <div className="section-gap"><EmptyDashboard /></div> : <div className="grid dashboard-grid"><Funnel summary={summary} /><TodayTasks summary={summary} /></div>}
+    {summary.publicIntakeSubmissions.length > 0 && <section className="card section-gap"><div className="card-head"><div><h2 className="card-title">Revisar entradas do link público</h2><p className="card-copy">Confira os dados enviados e prepare o próximo contato.</p></div><span className="badge">{summary.publicIntakeCount} pendentes</span></div><div className="task-list">{summary.publicIntakeSubmissions.map((submission) => <Link className="task-row" key={submission.id} href={`/leads/${submission.lead_id}`}><span className="task-dot" /><span style={{ minWidth: 0, flex: 1 }}><span className="task-name" style={{ display: 'block' }}>{submission.leads?.name ?? 'Empresa'}</span><span className="task-meta">{submission.leads?.city ?? 'Cidade não informada'} · {submission.upload_state === 'RECEBIDO' ? 'Fatura recebida' : 'Aguardando fatura'}</span></span><ArrowRight size={14} color="#88969b" /></Link>)}</div></section>}
     {summary.leadCount > 0 && <div className="section-gap" style={{ textAlign: 'right' }}><Link className="btn btn-ghost" href="/pipeline">Ver pipeline <ArrowUpRight size={14} /></Link></div>}
   </main>
 }

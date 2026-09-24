@@ -13,6 +13,7 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:public-intake": "vitest run src/lib/public-intake/__tests__/integration.local.test.ts",
     "test:watch": "vitest"
   },
   "keywords": [],

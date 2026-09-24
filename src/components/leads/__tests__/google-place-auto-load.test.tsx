@@ -56,11 +56,11 @@ describe('Google place data on the lead page', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: placePreview.name })).toBeTruthy()
     expect(screen.getAllByText(placePreview.address)).toHaveLength(2)
-    expect(screen.getByText(placePreview.phone)).toBeTruthy()
+    expect(screen.getAllByText(placePreview.phone)).toHaveLength(2)
     expect(screen.getByRole('img', { name: `Foto de capa de ${placePreview.name}` })).toBeTruthy()
     expect(screen.getByRole('link', { name: 'Ver esta foto no Google Maps' })).toBeTruthy()
     expect(await screen.findByDisplayValue(`Olá, ${placePreview.name}!`)).toBeTruthy()
-    expect((screen.getByRole('button', { name: 'WhatsApp' }) as HTMLButtonElement).disabled).toBe(false)
+    expect((screen.getByRole('button', { name: /WhatsApp/ }) as HTMLButtonElement).disabled).toBe(false)
     expect(fetchMock).toHaveBeenCalledWith('/api/leads/lead-42/google-place', { cache: 'no-store' })
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
     expect(screen.queryByRole('button', { name: 'Carregar ficha e foto do Google' })).toBeNull()
